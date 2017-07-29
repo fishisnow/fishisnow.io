@@ -13,8 +13,8 @@ avatar: /images/logo.jpg
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: https://github.com/fishisnow/fishisnow.io/
-root: /fishisnow.io
+url: http://www.fishisnow.cn/
+root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 
