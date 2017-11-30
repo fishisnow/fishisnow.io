@@ -10,6 +10,7 @@ tags:
 
 ### spring ioc
 spring ipc的基本意思是控制反转，java通过new来实例化的一个对象, 通常情况下这个对象的生命周期十分简单，但是在spring容器中，bean的生命周期更加灵活，更加便于管理。spring核心包中也是围绕着ioc的设计和实现，以及如何管理bean的生命周期来实现的。
+<!--more-->
 
 ### spring beans包结构
 1. annotation spring的bean的注解支持包
