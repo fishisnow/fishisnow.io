@@ -115,4 +115,11 @@ protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, 
 }
 
 ```
-mbd就是继承BeanFactory的根定义类，可以看出spring是通过InstantiationAwareBeanPostProcessor或者说BeanProcessor来构造bean的
+RootBeanDefinition mbd就是继承BeanDefinition的实现类，这个接口描述bean的结构，对应XML中的bean定义，
+可以看出spring是通过单例工厂创建单例时是通过InstantiationAwareBeanPostProcessor或者说BeanProcessor的回调
+来返回对应实例的．这个接口其实是bean实例化的后置处理类，其返回的对象会代理原来实例的bean，这个不做探讨．
+
+### 总结
+从源码中可以看出，spring容器中实现的单例和我们通常情况下理解的设计模式中的单例是不一样，设计模式中的单例模式是将构造方法私有，在
+整个应用中只有一个实例．而spring容器的单例是在整个容器中只有一个实例，由于ioc的控制反转，bean实例的生成和销毁都交给了spring容器，
+本质上只是控制反射生成类实例的时候不在容器中重复创建，不通过私有构造方法便可以达到单例的效果也就不难理解了．
