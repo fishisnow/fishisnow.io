@@ -1,7 +1,7 @@
 ---
 title: spring源码阅读-aop的设计与实现(一)
 date: 2018-01-21 20:58:34
-tags: spring,java
+tags: [spring],[java]
 ---
 ## spring的面向切面的思想
 　　在spring中许多功能的设计使用了AOP的方式，如事务的管理，通过声明＠transactional元数据来切换不同的数据源，
