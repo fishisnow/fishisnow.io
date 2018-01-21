@@ -8,10 +8,10 @@ tags: spring,java
 理解AOP的设计与实现更有利于我们日常对spring相关功能的使用和问题解决．
 ## jdk提供的代理实现
 　　AOP其实是通过代理类来执行对被代理类执行切面的方法，通过执行方法中加入切面拦截的逻辑和处理，来实现面向切面编程．JDK
-提供了生成对象的动态代理功能．
+提供了生成对象的动态代理功能．<!--more-->
 
 |类名|说明|
-|---:|--:|
+|:---|:--|
 |Proxy|Object newProxyInstance(ClassLoader loader, Class<?>[] interfaces, InvocationHandler h) 方法返回一个代理对象|
 |InvocationaHandler|Object invoke(Object proxy, Method method,Object[] args) 方法实现代理对象中方法的调用和处理|
 
