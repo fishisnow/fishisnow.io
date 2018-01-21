@@ -1,7 +1,7 @@
 ---
 title: spring源码阅读-ioc设计与实现(二)
 date: 2017-12-03 20:00:43
-tags: [spring],[java]
+tags: [spring]
 ---
 ### 从异常栈说起
 我们已经知道spring ioc容器初始的顶层核心接口是BeanFactory，而其最终的默认实现类是DefaultListableBeanFactory．
@@ -16,7 +16,7 @@ DefaultSingletonBeanRegistry继承SingletonBeanRegistry接口
 
 #### 注册单例的方法
 
-```
+```java
 public void registerSingleton(String beanName, Object singletonObject) throws IllegalStateException {
     synchronized (this.singletonObjects) {
         Object oldObject = this.singletonObjects.get(beanName);
@@ -29,7 +29,7 @@ public void registerSingleton(String beanName, Object singletonObject) throws Il
 }
 	
 ```
-```
+```java
 protected Object getSingleton(String beanName, boolean allowEarlyReference) {
     Object singletonObject = this.singletonObjects.get(beanName);
     if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
@@ -52,7 +52,7 @@ DefaultSingletonBeanRegistry中维护了一个线程安全的缓存和非线程�
 注册中心注册bean实例的时候会从单例对象map中查找，如果没有则添加到对应的单例对象map和缓存中，确保容器中只有一个单实例．
 
 #### 添加实例的方法
-```
+```java
 protected void addSingleton(String beanName, Object singletonObject) {
     synchronized (this.singletonObjects) {
         this.singletonObjects.put(beanName, singletonObject);
@@ -69,7 +69,7 @@ protected void addSingleton(String beanName, Object singletonObject) {
 ### spring的单例工厂类的实现
 从异常栈中可以看出AbstractBeanFactory的AbstractAutowireCapableBeanFactory模板类中通过了单例工厂来创建单例
 doGetBean方法的代码片段
-```
+```java
 if (mbd.isSingleton()) {
     sharedInstance = getSingleton(beanName, () -> {
         try {
@@ -88,7 +88,7 @@ if (mbd.isSingleton()) {
 ```
 
 createBean的伪代码
-```
+```java
 RootBeanDefinition mbdToUse = mbd;
 获取类的class
 Class<?> resolvedClass = resolveBeanClass(mbd, beanName);

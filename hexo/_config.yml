@@ -75,9 +75,14 @@ pagination_dir: page
 ## Themes: https://hexo.io/themes/
 theme: next
 
+# Code Highlight theme
+# Available value: normal | night | night eighties | night blue | night bright
+# https://github.com/chriskempson/tomorrow-theme
+highlight_theme: night
+
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repository: https://github.com/fishisnow/fishisnow.io
+i  repository: https://github.com/fishisnow/fishisnow.io
   branch: master

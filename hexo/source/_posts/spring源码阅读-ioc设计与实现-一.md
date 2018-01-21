@@ -1,7 +1,7 @@
 ---
 title: spring源码阅读-ioc设计与实现(一)
 date: 2017-11-20 23:47:58
-tags: [spring],[java]
+tags: [spring]
 ---
 
 ### spring核心包
@@ -30,7 +30,7 @@ registerBeanDefinition(String beanName, BeanDefinition beanDefinition)方法来�
 这个工厂类中Map<String, BeanDefinition> beanDefinitionMap来存放Bean，key是对应的bean的名字。每一次
 在spring中初始化的bean都会放在这个map中。
 spring BeanFactory初始化的伪代码
-```
+```java
     //new 一个工厂类
     DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
 

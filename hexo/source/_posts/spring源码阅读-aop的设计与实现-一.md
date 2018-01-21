@@ -1,7 +1,7 @@
 ---
 title: spring源码阅读-aop的设计与实现(一)
 date: 2018-01-21 20:58:34
-tags: [spring],[java]
+tags: [spring]
 ---
 ## spring的面向切面的思想
 　　在spring中许多功能的设计使用了AOP的方式，如事务的管理，通过声明＠transactional元数据来切换不同的数据源，
@@ -29,7 +29,7 @@ tags: [spring],[java]
   我们知道spring的bean是基于IOC自动注入的，也就是说要对某个bean实现切面编程，就得在BeanFactory中getBean()方法修改其返回的bean．
 前面提到的BeanFactory.getBean->doCreateBean->initializeBean()中提到BeanPostProcessor类．这个类就是用来在初始化bean的时候对这个bean
 进行前置和后置的一些操作．
-```
+```java
 Object initializeBean(final String beanName, final Object bean, @Nullable RootBeanDefinition mbd) {
   Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
   invokeInitMethods(beanName, wrappedBean, mbd);
@@ -54,7 +54,7 @@ public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, St
 ```
 从代码我们可以看出，我们只要找出AOP声明的BeanPostProcessor抽象类就可以找到IOC植入AOP的方法．它就是AbstractAdvisingBeanPostProcessor类
 我们看下它继承的BeanPostProcessor的postProcessAfterInitialization的实现．（这里为了清晰，只是简单写了其逻辑）
-```
+```java
     if(bean instanceof AopInfrastructureBean || bean instanceof Advised || this.Advisor == null) {
       //如果是AOP的拦截器类或者通知器类，则返回．
       return;
