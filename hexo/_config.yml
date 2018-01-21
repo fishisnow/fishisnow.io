@@ -84,5 +84,5 @@ highlight_theme: night
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-i  repository: https://github.com/fishisnow/fishisnow.io
+  repository: https://github.com/fishisnow/fishisnow.io
   branch: master
