@@ -94,7 +94,7 @@ public class CglibTest implements MethodInterceptor {
 ```
 
 ### 问题与思考
-#### 因为cglib是继承父类来实现的代理,在java中final方法是不能重载的,所以这种情况cglib应该无法处理的.Object类中有的方法是final方法,我们可以通过打印代理类这些方法的输出看看.同理,final声明的子类也是一样.
+因为cglib是继承父类来实现的代理,在java中final方法是不能重载的,所以这种情况cglib应该无法处理的.Object类中有的方法是final方法,我们可以通过打印代理类这些方法的输出看看.同理,final声明的类也是一样.
 ```java
 @Override
    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
