@@ -1,7 +1,9 @@
 ---
 title: spring-mvc之dispatcherServlet
 date: 2018-04-02 00:06:59
-tags: [spring]
+tags: 
+- spring
+- java
 ---
 
 spring-mvc是一个基于servlet-api的一个web框架，它是围绕前端控制器来设计的。spring-mvc核心是一个servlet,即dispatcherServlet，它对请求进行分发，并将请求交给请求映射、视图解析、异常处理等所需的组件来处理。

@@ -1,7 +1,9 @@
 ---
 title: tomcat的结构和启动分析
 date: 2018-03-18 14:50:04
-tags: [tomcat]
+tags: 
+- tomcat
+- java
 ---
 tomcat是作为一个轻量的web服务器，是很多应用开发和部署的首选。
 

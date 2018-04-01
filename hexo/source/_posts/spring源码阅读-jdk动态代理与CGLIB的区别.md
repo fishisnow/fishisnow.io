@@ -1,7 +1,9 @@
 ---
 title: spring源码阅读-jdk动态代理与CGLIB的区别
 date: 2018-02-04 23:09:11
-tags: [java]
+tags: 
+- spring
+- java
 ---
 ## spring中实现动态代理的方式有两种,一种是使用jdk的原生接口,一种是使用CGLIB的技术.<!--more-->
 
