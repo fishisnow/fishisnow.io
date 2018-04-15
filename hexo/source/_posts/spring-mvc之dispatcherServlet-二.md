@@ -244,5 +244,5 @@ if (this.notModified) {
 spring mvc对请求的处理流程大概是
 FrameworkServlet.processedRequest->DispatcherServlet.doService->doDispatch
 FrameworkServlet负责将所有的请求合并到processedRequest中，并发布处理完成事件，相当与一个外层的装饰。
-doService负责设置请求的属性并在请求结束后重新还原属性。doDispatch则是对请求进行映射，找到对应的处理器处理，并执行拦截器的方法
-，根据处理器返回的结果封装视图。
+doService负责设置请求的属性并在请求结束后重新还原属性。doDispatch则是对请求进行映射，找到对应的处理器处理，
+并执行拦截器的方法，根据处理器返回的结果封装视图。
