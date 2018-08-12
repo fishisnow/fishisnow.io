@@ -13,7 +13,7 @@ avatar: /images/logo.jpg
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://www.fishisnow.cn/
+url: http://www.fishisnow.com/
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
@@ -80,5 +80,5 @@ theme: next
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repository: https://github.com/fishisnow/fishisnow.io
+  repository: https://github.com/fishisnow/fishisnow.github.io.git
   branch: master
