@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="java,spring,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="spring的面向切面的思想　　在spring中许多功能的设计使用了AOP的方式，如事务的管理，通过声明＠transactional元数据来切换不同的数据源，理解AOP的设计与实现更有利于我们日常对spring相关功能的使用和问题解决． jdk提供的代理实现　　AOP其实是通过代理类来执行对被代理类执行切面的方法，通过执行方法中加入切面拦截的逻辑和处理，来实现面向切面编程．JDK提供了生成对象的动">
+<meta name="keywords" content="java,spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spring源码阅读-aop的设计与实现(一)">
+<meta property="og:url" content="http://www.fishisnow.com/2018/01/21/spring源码阅读-aop的设计与实现-一/index.html">
+<meta property="og:site_name" content="fishisnow&#39;s blog">
+<meta property="og:description" content="spring的面向切面的思想　　在spring中许多功能的设计使用了AOP的方式，如事务的管理，通过声明＠transactional元数据来切换不同的数据源，理解AOP的设计与实现更有利于我们日常对spring相关功能的使用和问题解决． jdk提供的代理实现　　AOP其实是通过代理类来执行对被代理类执行切面的方法，通过执行方法中加入切面拦截的逻辑和处理，来实现面向切面编程．JDK提供了生成对象的动">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-02-28T15:08:18.255Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spring源码阅读-aop的设计与实现(一)">
+<meta name="twitter:description" content="spring的面向切面的思想　　在spring中许多功能的设计使用了AOP的方式，如事务的管理，通过声明＠transactional元数据来切换不同的数据源，理解AOP的设计与实现更有利于我们日常对spring相关功能的使用和问题解决． jdk提供的代理实现　　AOP其实是通过代理类来执行对被代理类执行切面的方法，通过执行方法中加入切面拦截的逻辑和处理，来实现面向切面编程．JDK提供了生成对象的动">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.fishisnow.com/2018/01/21/spring源码阅读-aop的设计与实现-一/">
+
+
+
+
+
+  <title>spring源码阅读-aop的设计与实现(一) | fishisnow's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">fishisnow's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">醉在现实，醒在梦里</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://www.fishisnow.com/2018/01/21/spring源码阅读-aop的设计与实现-一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="fishisnow">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="fishisnow's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spring源码阅读-aop的设计与实现(一)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-21T20:58:34+08:00">
+                2018-01-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="spring的面向切面的思想"><a href="#spring的面向切面的思想" class="headerlink" title="spring的面向切面的思想"></a>spring的面向切面的思想</h2><p>　　在spring中许多功能的设计使用了AOP的方式，如事务的管理，通过声明＠transactional元数据来切换不同的数据源，<br>理解AOP的设计与实现更有利于我们日常对spring相关功能的使用和问题解决．</p>
+<h2 id="jdk提供的代理实现"><a href="#jdk提供的代理实现" class="headerlink" title="jdk提供的代理实现"></a>jdk提供的代理实现</h2><p>　　AOP其实是通过代理类来执行对被代理类执行切面的方法，通过执行方法中加入切面拦截的逻辑和处理，来实现面向切面编程．JDK<br>提供了生成对象的动态代理功能．<a id="more"></a></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">类名</th>
+<th style="text-align:left">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Proxy</td>
+<td style="text-align:left">Object newProxyInstance(ClassLoader loader, Class&lt;?&gt;[] interfaces, InvocationHandler h) 方法返回一个代理对象</td>
+</tr>
+<tr>
+<td style="text-align:left">InvocationaHandler</td>
+<td style="text-align:left">Object invoke(Object proxy, Method method,Object[] args) 方法实现代理对象中方法的调用和处理</td>
+</tr>
+</tbody>
+</table>
+<h2 id="AOP思想涉及的元素"><a href="#AOP思想涉及的元素" class="headerlink" title="AOP思想涉及的元素"></a>AOP思想涉及的元素</h2><p>  说白了就是拦截什么对象，在哪里做的拦截，拦截后做什么．在Aspectj(一个面向切面的框架)对其进行了声明和定义．</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:right">类名</th>
+<th style="text-align:right">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">PointcutAdvisor</td>
+<td style="text-align:right">切点通知器，通知哪个对象的哪个方法进行拦截</td>
+</tr>
+<tr>
+<td style="text-align:right">Pointcut</td>
+<td style="text-align:right">切点对象，在AOP中有连接点的概念，这个连接点可以理解为程序的某个执行过程，比如调用方法，执行方法等，Pointcut就是对这些连接点做定义</td>
+</tr>
+<tr>
+<td style="text-align:right">Advisor</td>
+<td style="text-align:right">通知器对象，对应spring中的前置通知，后置通知，环切通知，也就是被拦截方法调用前，调用后等，通过通知器通知代理类执行拦截方法</td>
+</tr>
+</tbody>
+</table>
+<p>这里面的设计思想具体看Aspectj的源码，这里我们主要讲spring怎么运用的．</p>
+<h2 id="spring中AOP是怎么嵌入的"><a href="#spring中AOP是怎么嵌入的" class="headerlink" title="spring中AOP是怎么嵌入的"></a>spring中AOP是怎么嵌入的</h2><p>  我们知道spring的bean是基于IOC自动注入的，也就是说要对某个bean实现切面编程，就得在BeanFactory中getBean()方法修改其返回的bean．<br>前面提到的BeanFactory.getBean-&gt;doCreateBean-&gt;initializeBean()中提到BeanPostProcessor类．这个类就是用来在初始化bean的时候对这个bean<br>进行前置和后置的一些操作．<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Object <span class="title">initializeBean</span><span class="params">(<span class="keyword">final</span> String beanName, <span class="keyword">final</span> Object bean, @Nullable RootBeanDefinition mbd)</span> </span>&#123;</span><br><span class="line">  Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);</span><br><span class="line">  invokeInitMethods(beanName, wrappedBean, mbd);</span><br><span class="line">  wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);</span><br><span class="line">  \\.....</span><br><span class="line">  <span class="keyword">return</span> wrappedBean;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">applyBeanPostProcessorsAfterInitialization</span><span class="params">(Object existingBean, String beanName)</span></span></span><br><span class="line"><span class="function">    <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line"></span><br><span class="line">  Object result = existingBean;</span><br><span class="line">  <span class="keyword">for</span> (BeanPostProcessor beanProcessor : getBeanPostProcessors()) &#123;</span><br><span class="line">    Object current = beanProcessor.postProcessAfterInitialization(result, beanName);</span><br><span class="line">    <span class="keyword">if</span> (current == <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">    result = current;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>从代码我们可以看出，我们只要找出AOP声明的BeanPostProcessor抽象类就可以找到IOC植入AOP的方法．它就是AbstractAdvisingBeanPostProcessor类<br>我们看下它继承的BeanPostProcessor的postProcessAfterInitialization的实现．（这里为了清晰，只是简单写了其逻辑）<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">  <span class="keyword">if</span>(bean <span class="keyword">instanceof</span> AopInfrastructureBean || bean <span class="keyword">instanceof</span> Advised || <span class="keyword">this</span>.Advisor == <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="comment">//如果是AOP的拦截器类或者通知器类，则返回．</span></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (isEligible(bean, beanName)) &#123;</span><br><span class="line">    <span class="comment">//找到生成这个bean代理的工厂类，接着看看这个类有没有合理的接口方法，如果有则使用JDK生成动态代理对象，</span></span><br><span class="line">    <span class="comment">//没有则直接通过目标对象的class字节码来生成代理对象（也就是CGLIB的那一套）</span></span><br><span class="line">	ProxyFactory proxyFactory = prepareProxyFactory(bean, beanName);</span><br><span class="line">	<span class="keyword">if</span> (!proxyFactory.isProxyTargetClass()) &#123;</span><br><span class="line">		evaluateProxyInterfaces(bean.getClass(), proxyFactory);</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//向拦截器链中增加本拦截器</span></span><br><span class="line">	proxyFactory.addAdvisor(<span class="keyword">this</span>.advisor);</span><br><span class="line">	customizeProxyFactory(proxyFactory);</span><br><span class="line">    <span class="comment">//通过JDK动态代理或CGLIB创建代理对象</span></span><br><span class="line">	<span class="keyword">return</span> proxyFactory.getProxy(getProxyClassLoader());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>创建代理对象后，spring的使用者执行方法时其实就是拿代理对象的方法去执行了．这样AOP就植入了spring中容器中了．</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>　　本文主要是梳理了下AOP在spring中是如何使用和植入的，方便我们进一步理解AOP的设计与实现．下一文将重点学习关于Spring如何利用AspectJ的定义来设计其面向切面的功能的．</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/java/" rel="tag"># java</a>
+          
+            <a href="/tags/spring/" rel="tag"># spring</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/12/03/spring源码阅读-ioc设计与实现(二)/" rel="next" title="spring源码阅读-ioc设计与实现(二)">
+                <i class="fa fa-chevron-left"></i> spring源码阅读-ioc设计与实现(二)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/02/04/spring源码阅读-jdk动态代理与CGLIB的区别/" rel="prev" title="spring源码阅读-jdk动态代理与CGLIB的区别">
+                spring源码阅读-jdk动态代理与CGLIB的区别 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="fishisnow">
+          <p class="site-author-name" itemprop="name">fishisnow</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#spring的面向切面的思想"><span class="nav-number">1.</span> <span class="nav-text">spring的面向切面的思想</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#jdk提供的代理实现"><span class="nav-number">2.</span> <span class="nav-text">jdk提供的代理实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AOP思想涉及的元素"><span class="nav-number">3.</span> <span class="nav-text">AOP思想涉及的元素</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#spring中AOP是怎么嵌入的"><span class="nav-number">4.</span> <span class="nav-text">spring中AOP是怎么嵌入的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">fishisnow</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/three/three.min.js"></script>
+
+  
+  <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

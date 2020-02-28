@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="java,spring,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="什么是handlerMappingspring mvc中handlerMapping用来通过request找到相应处理器的handler和Interceptor.它的接口十分简单，只有getHandler(HttpServletRequest request)方法，返回HandlerExecutionChain，HandlerExecutionChain主要有两个属性，一个页面控制器（handle">
+<meta name="keywords" content="java,spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spring-mvc之HandlerMapping的实现">
+<meta property="og:url" content="http://www.fishisnow.com/2018/05/01/spring-mvc之HandlerMapping的实现/index.html">
+<meta property="og:site_name" content="fishisnow&#39;s blog">
+<meta property="og:description" content="什么是handlerMappingspring mvc中handlerMapping用来通过request找到相应处理器的handler和Interceptor.它的接口十分简单，只有getHandler(HttpServletRequest request)方法，返回HandlerExecutionChain，HandlerExecutionChain主要有两个属性，一个页面控制器（handle">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.fishisnow.com/images/img4.png">
+<meta property="og:image" content="http://www.fishisnow.com/images/img5.png">
+<meta property="og:updated_time" content="2020-02-28T15:08:18.254Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spring-mvc之HandlerMapping的实现">
+<meta name="twitter:description" content="什么是handlerMappingspring mvc中handlerMapping用来通过request找到相应处理器的handler和Interceptor.它的接口十分简单，只有getHandler(HttpServletRequest request)方法，返回HandlerExecutionChain，HandlerExecutionChain主要有两个属性，一个页面控制器（handle">
+<meta name="twitter:image" content="http://www.fishisnow.com/images/img4.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.fishisnow.com/2018/05/01/spring-mvc之HandlerMapping的实现/">
+
+
+
+
+
+  <title>spring-mvc之HandlerMapping的实现 | fishisnow's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">fishisnow's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">醉在现实，醒在梦里</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://www.fishisnow.com/2018/05/01/spring-mvc之HandlerMapping的实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="fishisnow">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="fishisnow's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spring-mvc之HandlerMapping的实现</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-01T02:38:49+08:00">
+                2018-05-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="什么是handlerMapping"><a href="#什么是handlerMapping" class="headerlink" title="什么是handlerMapping"></a>什么是handlerMapping</h3><p>spring mvc中handlerMapping用来通过request找到相应处理器的handler和Interceptor.它的接口十分简单，<br>只有getHandler(HttpServletRequest request)方法，返回HandlerExecutionChain，HandlerExecutionChain主要有<br>两个属性，一个页面控制器（handler）和拦截器HandlerInterceptor组成的list。<a id="more"></a></p>
+<h3 id="handlerMapping类结构图"><a href="#handlerMapping类结构图" class="headerlink" title="handlerMapping类结构图"></a>handlerMapping类结构图</h3><p><img src="/images/img4.png" alt="HandlerMapping的子类的继承结构"><br>AbstractHandlerMapping是HandlerMapping的抽象实现，所有的handlerMapping都继承于AbstractHandlerMapping,这里使用了模板模式设计了HandlerMapping的实现.<br>HandlerMapping实现分为两个分支，一个是AbstractUrlHandlerMapping，另一个是AbstractHandlerMethodMapping。AbstractUrlHandlerMapping主要是通过url来映射控制器，而AbstractHandlerMethodMapping是将Method来作为控制器的，我们通常在方法中配置@RequestMapping来控制请求处理就是通过这种形式实现的。<br>AbstractHandlerMapping继承了Ordered和WebApplicationObjectSupport，handlerMapping是有顺序的，映射控制器的时候会根据顺序的优先级来处理。后者则是提供了获取容器ServletContext的能力。<br><img src="/images/img5.png" alt="获取handler调用逻辑时序图"></p>
+<h3 id="AbstractHandlerMethodMapping"><a href="#AbstractHandlerMethodMapping" class="headerlink" title="AbstractHandlerMethodMapping"></a>AbstractHandlerMethodMapping</h3><p>AbstractHandlerMethodMapping中有个一个内部类MappingRegistry，其中部分属性是<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;T, MappingRegistration&lt;T&gt;&gt; registry = <span class="keyword">new</span> HashMap&lt;T, MappingRegistration&lt;T&gt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;T, HandlerMethod&gt; mappingLookup = <span class="keyword">new</span> LinkedHashMap&lt;T, HandlerMethod&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> MultiValueMap&lt;String, T&gt; urlLookup = <span class="keyword">new</span> LinkedMultiValueMap&lt;String, T&gt;();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, List&lt;HandlerMethod&gt;&gt; nameLookup =</span><br><span class="line">    <span class="keyword">new</span> ConcurrentHashMap&lt;String, List&lt;HandlerMethod&gt;&gt;();</span><br></pre></td></tr></table></figure></p>
+<p>这里的T在RequestMappingInfoHandlerMapping是RequestMappingInfo类，是用来存放匹配handler的条件的类。<br>在AbstractHandlerMethodMapping初始化时，会从容器中拿所有是handler类型的bean,然后去获取这个bean的方法，<br>将方法用来匹配映射handler的条件封装成一个RequestMappingInfo,并注册到map中。这个map在lookupHandlerMethod会用到。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//伪代码</span></span><br><span class="line">initHandlerMethods() &#123;</span><br><span class="line">  ApplicationContext context = getApplicationContext();</span><br><span class="line">  String[] beanNames = context.getBeanNamesForType(Object<span class="class">.<span class="keyword">class</span>)</span>;; <span class="comment">//从容器中获取所有的bean</span></span><br><span class="line">  <span class="keyword">for</span>(String beanName: beanNames) &#123;</span><br><span class="line">    <span class="comment">//遍历</span></span><br><span class="line">    Class&lt;?&gt; beanType = context.getType(beanName);</span><br><span class="line">    <span class="comment">//isHandler由子类RequestMappingInfoHandlerMapping实现，判断是否有＠Controller和＠RequestMapping注解</span></span><br><span class="line">    <span class="keyword">if</span>(beanType != <span class="keyword">null</span> &amp;&amp; isHandler(beanType)) &#123;</span><br><span class="line">        <span class="comment">//获取这个bean所有符合handler要求的方法，已经它对应的匹配条件组成的k-v形式的map</span></span><br><span class="line">        Map&lt;Method, RequestMappingInfo&gt; methods = selectMethods(beanType);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span>() &#123;</span><br><span class="line">          <span class="comment">//分别将这些bean和对应mehods注册到MappingRegistry中</span></span><br><span class="line">          <span class="comment">//这个handler就是beanName</span></span><br><span class="line">          registerHandlerMethod(handler, invocableMethod, mapping)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">lookupHandlerMethod(String lookupPath, HttpServletRequest request) &#123;</span><br><span class="line">  List&lt;Match&gt; matches = <span class="keyword">new</span> ArrayList&lt;Match&gt;();</span><br><span class="line">  <span class="comment">//根据传进来的请求，从MappingRegistry中查找是否有跟当前url匹配的HandlerMethod</span></span><br><span class="line">  List&lt;T&gt; directPathMatches = <span class="keyword">this</span>.mappingRegistry.getMappingsByUrl(lookupPath);</span><br><span class="line">  <span class="comment">//如果有　加入到matches中</span></span><br><span class="line">  <span class="keyword">if</span>(directPathMatches != <span class="keyword">null</span>) &#123;</span><br><span class="line">    addMatchingMappings(directPathMatches, matches, request);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//...如果没有与当前url匹配　再根据匹配条件遍历</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// matches不为空时　排序取匹配度最高的</span></span><br><span class="line">  <span class="keyword">if</span>(matches.isNotEmpty()) &#123;</span><br><span class="line">    Collections.sort(matches, comparator);</span><br><span class="line">    Match bestMatch = matches.get(<span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> bestMatch.handlerMethod;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>HandlerMapping的功能就是根据request找到对应的handler和Interceptor, 组成HandlerExecutionChain类返回。<br>寻找handler的方法通过模板方法getHandlerInternal交给了子类去实现，其他的整体结构都在AbstractHandlerMapping中完成。我们常用的<br>在Controller中声明@RequestMapping注解来实现请求的映射是由AbstractHandlerMethodMapping子类来实现的。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/java/" rel="tag"># java</a>
+          
+            <a href="/tags/spring/" rel="tag"># spring</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/15/spring-mvc之dispatcherServlet-二/" rel="next" title="spring-mvc之dispatcherServlet(二)">
+                <i class="fa fa-chevron-left"></i> spring-mvc之dispatcherServlet(二)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/27/spring-mvc之HandlerAdapter适配器模式/" rel="prev" title="spring-mvc之HandlerAdapter适配器模式">
+                spring-mvc之HandlerAdapter适配器模式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="fishisnow">
+          <p class="site-author-name" itemprop="name">fishisnow</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是handlerMapping"><span class="nav-number">1.</span> <span class="nav-text">什么是handlerMapping</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#handlerMapping类结构图"><span class="nav-number">2.</span> <span class="nav-text">handlerMapping类结构图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#AbstractHandlerMethodMapping"><span class="nav-number">3.</span> <span class="nav-text">AbstractHandlerMethodMapping</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">fishisnow</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/three/three.min.js"></script>
+
+  
+  <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="java,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="在框架的源码中经常会用到java反射机制，工厂模式和代理模式都离不开java反射，总结和理解下反射。 反射的作用 在运行时判断任意一个对象所属的类； 在运行时获取类的对象； 在运行时访问java对象的属性，方法，构造方法等">
+<meta name="keywords" content="java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="java反射总结">
+<meta property="og:url" content="http://www.fishisnow.com/2018/03/04/java反射总结/index.html">
+<meta property="og:site_name" content="fishisnow&#39;s blog">
+<meta property="og:description" content="在框架的源码中经常会用到java反射机制，工厂模式和代理模式都离不开java反射，总结和理解下反射。 反射的作用 在运行时判断任意一个对象所属的类； 在运行时获取类的对象； 在运行时访问java对象的属性，方法，构造方法等">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2020-02-28T15:08:18.253Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="java反射总结">
+<meta name="twitter:description" content="在框架的源码中经常会用到java反射机制，工厂模式和代理模式都离不开java反射，总结和理解下反射。 反射的作用 在运行时判断任意一个对象所属的类； 在运行时获取类的对象； 在运行时访问java对象的属性，方法，构造方法等">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.fishisnow.com/2018/03/04/java反射总结/">
+
+
+
+
+
+  <title>java反射总结 | fishisnow's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">fishisnow's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">醉在现实，醒在梦里</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://www.fishisnow.com/2018/03/04/java反射总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="fishisnow">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="fishisnow's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">java反射总结</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-04T23:10:37+08:00">
+                2018-03-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在框架的源码中经常会用到java反射机制，工厂模式和代理模式都离不开java反射，总结和理解下反射。</p>
+<h2 id="反射的作用"><a href="#反射的作用" class="headerlink" title="反射的作用"></a>反射的作用</h2><ol>
+<li>在运行时判断任意一个对象所属的类；</li>
+<li>在运行时获取类的对象；</li>
+<li>在运行时访问java对象的属性，方法，构造方法等<a id="more"></a></li>
+</ol>
+<h2 id="为什么会有反射"><a href="#为什么会有反射" class="headerlink" title="为什么会有反射"></a>为什么会有反射</h2><h3 id="灵活实现面向对象"><a href="#灵活实现面向对象" class="headerlink" title="灵活实现面向对象"></a>灵活实现面向对象</h3><p>反射可以在运行时确定对象类型，访问对象的方法，属性等，这是动态编译的优点，灵活，降低类的耦合。<br>啥是动态编译呢，我的理解是java是先编译后运行的，在程序运行时代码已经时固定了，如果没有在代码中new一个对象，那么可以通过类名找到class文件，并加载进内存，用这个字节码文件来创建对象，这就是动态编译，区别与静态编译就是不是程序预先设定好的，而是在运行过程中确定对象类型。<br>比如我们知道与mysql数据库建立连接，如果不用反射，我们可能会这样写来获取数据驱动<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(isMysql) &#123;</span><br><span class="line">  Connection con = <span class="keyword">new</span> MysqlConnection();  </span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span>(isOracle) &#123;</span><br><span class="line">  Connection con = <span class="keyword">new</span> OracleConnection();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这样写的话，如果切换数据库从mysql切到oracel或其他数据库，我们都要修改下代码再编译项目重启服务，可想很麻烦。<br>有了反射我们就可以通过 Connection con = Class.forName(“”)来加载驱动，然后再用驱动连接。这样切换数据库只需要修改配置文件就可以了。</p>
+<h3 id="动态操作对象的属性和方法"><a href="#动态操作对象的属性和方法" class="headerlink" title="动态操作对象的属性和方法"></a>动态操作对象的属性和方法</h3><p>比如我们可以通过反射来实现java类方法的远程调用<br>测试code，看下通过反射可以从字节码中读取类的方法，属性内容是什么。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">A</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello world1"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(String str)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello world2"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sayHello</span><span class="params">(List&lt;String&gt; stringList)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"hello world3"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">package</span> reflect;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        Class clazz = Class.forName(<span class="string">"reflect.A"</span>);</span><br><span class="line">        Object a = clazz.newInstance();</span><br><span class="line">        <span class="comment">//通过反射获取对象的方法</span></span><br><span class="line">        Method[] methods = clazz.getDeclaredMethods();</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;methods.length;i++) &#123;</span><br><span class="line">            System.out.println(methods[i].getName());</span><br><span class="line">            Class[] parameterTypes = methods[i].getParameterTypes();</span><br><span class="line">            <span class="keyword">for</span>(Class parameterType : parameterTypes) &#123;</span><br><span class="line">                System.out.println(parameterType.getName());</span><br><span class="line">                System.out.println(parameterType.getClass());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 输出内容：</span></span><br><span class="line"><span class="comment">// sayHello</span></span><br><span class="line"><span class="comment">// java.util.List</span></span><br><span class="line"><span class="comment">// class java.lang.Class</span></span><br><span class="line"><span class="comment">// sayHello</span></span><br><span class="line"><span class="comment">// sayHello</span></span><br><span class="line"><span class="comment">// java.lang.String</span></span><br><span class="line"><span class="comment">// class java.lang.Class</span></span><br></pre></td></tr></table></figure></p>
+<p>通过反射我们可以知道一个类有那些声明的方法及方法的参数，重载的方法可以根据参数来区分。<br>所以我们可以这样来调用A类的方法。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        B b = <span class="keyword">new</span> B();</span><br><span class="line">        b.callMethod(<span class="string">"reflect.A"</span>, <span class="string">"sayHello"</span>, <span class="keyword">null</span>);</span><br><span class="line">        b.callMethod(<span class="string">"reflect.A"</span>, <span class="string">"sayHello"</span>, <span class="string">"hello"</span>);</span><br><span class="line">        List&lt;String&gt; stringList = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        stringList.add(<span class="string">"hello"</span>);</span><br><span class="line">        b.callMethod(<span class="string">"reflect.A"</span>, <span class="string">"sayHello"</span>, stringList);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">callMethod</span><span class="params">(String clazzName, String methodName, Object args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        Class clazz = Class.forName(clazzName);</span><br><span class="line">        Object o = clazz.newInstance();</span><br><span class="line">        <span class="comment">//通过反射获取对象的方法</span></span><br><span class="line">        Method[] methods = clazz.getDeclaredMethods();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; methods.length; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (methods[i].getName().equals(methodName)) &#123;</span><br><span class="line">                Class[] parameterTypes = methods[i].getParameterTypes();</span><br><span class="line">                <span class="keyword">if</span> (parameterTypes != <span class="keyword">null</span> &amp;&amp; parameterTypes.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    Class parameterType = parameterTypes[<span class="number">0</span>];</span><br><span class="line">                    <span class="keyword">if</span> (parameterType.equals(String<span class="class">.<span class="keyword">class</span>) &amp;&amp; <span class="title">args</span> <span class="title">instanceof</span> <span class="title">String</span>) </span>&#123;</span><br><span class="line">                        methods[i].invoke(o, args);</span><br><span class="line">                    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (parameterType.equals(List<span class="class">.<span class="keyword">class</span>) &amp;&amp; <span class="title">args</span> <span class="title">instanceof</span> <span class="title">List</span>) </span>&#123;</span><br><span class="line">                        methods[i].invoke(o, args);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (args == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    methods[i].invoke(o);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//输出：</span></span><br><span class="line"><span class="comment">// hello world1</span></span><br><span class="line"><span class="comment">// hello world2</span></span><br><span class="line"><span class="comment">// hello world3</span></span><br></pre></td></tr></table></figure></p>
+<p>很明显，我们是知道调用的时候的Ａ对象方法的参数是哪些才这样写，那假如我们不知道调用的参数有哪些，我们也不确定反射的类是谁的时候，又如何通过反射<br>去执行对象的方法呢？我们可以在客户端调用的时候将类的参数和对应class类型传进去，或者在反射类方法的时候将传进去的参数类型一个个比对。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">B</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        B b = <span class="keyword">new</span> B();</span><br><span class="line">        List&lt;Object&gt; argList = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        b.callMethod(<span class="string">"reflect.A"</span>, <span class="string">"sayHello"</span>, <span class="keyword">null</span>);</span><br><span class="line">        argList.add(<span class="string">"hello"</span>);</span><br><span class="line">        b.callMethod(<span class="string">"reflect.A"</span>, <span class="string">"sayHello"</span>, argList);</span><br><span class="line">        argList.clear();</span><br><span class="line">        List&lt;String&gt; stringList = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">        stringList.add(<span class="string">"hello"</span>);</span><br><span class="line">        argList.add(stringList);</span><br><span class="line">        b.callMethod(<span class="string">"reflect.A"</span>, <span class="string">"sayHello"</span>, argList);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">callMethod</span><span class="params">(String clazzName, String methodName, List&lt;Object&gt; argsList)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">//这里要求客户端传的List元素的顺序是严格与反射的方法一致</span></span><br><span class="line">        Class clazz = Class.forName(clazzName);</span><br><span class="line">        Object o = clazz.newInstance();</span><br><span class="line">        <span class="comment">//通过反射获取对象的方法</span></span><br><span class="line">        Method[] methods = clazz.getDeclaredMethods();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; methods.length; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (methods[i].getName().equals(methodName)) &#123;</span><br><span class="line">                Class[] parameterTypes = methods[i].getParameterTypes();</span><br><span class="line">                <span class="keyword">if</span> (parameterTypes != <span class="keyword">null</span> &amp;&amp; parameterTypes.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (argsList == <span class="keyword">null</span>) &#123;</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (parameterTypes.length != argsList.size()) &#123;</span><br><span class="line">                        <span class="keyword">continue</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">boolean</span> isCorrectArgs = <span class="keyword">true</span>;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; argsList.size(); j++) &#123;</span><br><span class="line">                        Object arg = argsList.get(j);</span><br><span class="line">                        <span class="keyword">if</span> (parameterTypes[j] == List<span class="class">.<span class="keyword">class</span>) </span>&#123;</span><br><span class="line">                          　<span class="comment">// 如果是List类型</span></span><br><span class="line">                            <span class="keyword">if</span> (arg <span class="keyword">instanceof</span> List) &#123;</span><br><span class="line">                            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                                isCorrectArgs = <span class="keyword">false</span>;</span><br><span class="line">                                <span class="keyword">break</span>;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                            <span class="keyword">if</span> (arg.getClass() != parameterTypes[j]) &#123;</span><br><span class="line">                                isCorrectArgs = <span class="keyword">false</span>;</span><br><span class="line">                                <span class="keyword">break</span>;</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (isCorrectArgs) &#123;</span><br><span class="line">                        methods[i].invoke(o, argsList.toArray());</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">else</span> <span class="keyword">if</span> (argsList == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    methods[i].invoke(o);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//输出：</span></span><br><span class="line"><span class="comment">// hello world1</span></span><br><span class="line"><span class="comment">// hello world2</span></span><br><span class="line"><span class="comment">// hello world3</span></span><br></pre></td></tr></table></figure></p>
+<h3 id="总结和思考"><a href="#总结和思考" class="headerlink" title="总结和思考"></a>总结和思考</h3><p>反射给程序提供了一种上帝视觉的模式，大大提高了程序开发的灵活性和扩展能力，但是反射是一种解释操作，<br>跟直接new创建对象还是有差别的，滥用反射会造成性能问题。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/java/" rel="tag"># java</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/02/04/spring源码阅读-jdk动态代理与CGLIB的区别/" rel="next" title="spring源码阅读-jdk动态代理与CGLIB的区别">
+                <i class="fa fa-chevron-left"></i> spring源码阅读-jdk动态代理与CGLIB的区别
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/18/tomcat的结构和启动分析/" rel="prev" title="tomcat的结构和启动分析">
+                tomcat的结构和启动分析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="fishisnow">
+          <p class="site-author-name" itemprop="name">fishisnow</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#反射的作用"><span class="nav-number">1.</span> <span class="nav-text">反射的作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么会有反射"><span class="nav-number">2.</span> <span class="nav-text">为什么会有反射</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#灵活实现面向对象"><span class="nav-number">2.1.</span> <span class="nav-text">灵活实现面向对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#动态操作对象的属性和方法"><span class="nav-number">2.2.</span> <span class="nav-text">动态操作对象的属性和方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结和思考"><span class="nav-number">2.3.</span> <span class="nav-text">总结和思考</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">fishisnow</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/three/three.min.js"></script>
+
+  
+  <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

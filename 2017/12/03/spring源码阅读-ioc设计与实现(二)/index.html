@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css">
+
+
+  <meta name="keywords" content="java,spring,">
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1">
+
+
+
+
+
+
+<meta name="description" content="从异常栈说起我们已经知道spring ioc容器初始的顶层核心接口是BeanFactory，而其最终的默认实现类是DefaultListableBeanFactory．我们可以从spring项目中初始化容器的时候，获取bean报的异常来理解spring获取单例bean的流程．">
+<meta name="keywords" content="java,spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spring源码阅读-ioc设计与实现(二)">
+<meta property="og:url" content="http://www.fishisnow.com/2017/12/03/spring源码阅读-ioc设计与实现(二)/index.html">
+<meta property="og:site_name" content="fishisnow&#39;s blog">
+<meta property="og:description" content="从异常栈说起我们已经知道spring ioc容器初始的顶层核心接口是BeanFactory，而其最终的默认实现类是DefaultListableBeanFactory．我们可以从spring项目中初始化容器的时候，获取bean报的异常来理解spring获取单例bean的流程．">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://www.fishisnow.com/images/img1.1.png">
+<meta property="og:image" content="http://www.fishisnow.com/images/img1.2.png">
+<meta property="og:updated_time" content="2020-02-28T15:08:18.255Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spring源码阅读-ioc设计与实现(二)">
+<meta name="twitter:description" content="从异常栈说起我们已经知道spring ioc容器初始的顶层核心接口是BeanFactory，而其最终的默认实现类是DefaultListableBeanFactory．我们可以从spring项目中初始化容器的时候，获取bean报的异常来理解spring获取单例bean的流程．">
+<meta name="twitter:image" content="http://www.fishisnow.com/images/img1.1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.fishisnow.com/2017/12/03/spring源码阅读-ioc设计与实现(二)/">
+
+
+
+
+
+  <title>spring源码阅读-ioc设计与实现(二) | fishisnow's blog</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">fishisnow's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">醉在现实，醒在梦里</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://www.fishisnow.com/2017/12/03/spring源码阅读-ioc设计与实现(二)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="fishisnow">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/logo.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="fishisnow's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spring源码阅读-ioc设计与实现(二)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-03T20:00:43+08:00">
+                2017-12-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="从异常栈说起"><a href="#从异常栈说起" class="headerlink" title="从异常栈说起"></a>从异常栈说起</h3><p>我们已经知道spring ioc容器初始的顶层核心接口是BeanFactory，而其最终的默认实现类是DefaultListableBeanFactory．<br>我们可以从spring项目中初始化容器的时候，获取bean报的异常来理解spring获取单例bean的流程．<br><img src="/images/img1.1.png" alt="spring初始化容器获取bean失败报错"><br><a id="more"></a></p>
+<h3 id="ioc获取单例的bean"><a href="#ioc获取单例的bean" class="headerlink" title="ioc获取单例的bean"></a>ioc获取单例的bean</h3><p>从异常栈截图中看出，单例模式的实现在support包下DefaultSingletonBeanRegistry类中<br>DefaultSingletonBeanRegistry继承SingletonBeanRegistry接口<br><img src="/images/img1.2.png" alt="SingletonBeanRegistry接口"></p>
+<h4 id="注册单例的方法"><a href="#注册单例的方法" class="headerlink" title="注册单例的方法"></a>注册单例的方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerSingleton</span><span class="params">(String beanName, Object singletonObject)</span> <span class="keyword">throws</span> IllegalStateException </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.singletonObjects) &#123;</span><br><span class="line">        Object oldObject = <span class="keyword">this</span>.singletonObjects.get(beanName);</span><br><span class="line">        <span class="keyword">if</span> (oldObject != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Could not register object ["</span> + singletonObject +</span><br><span class="line">                    <span class="string">"] under bean name '"</span> + beanName + <span class="string">"': there is already object ["</span> + oldObject + <span class="string">"] bound"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        addSingleton(beanName, singletonObject);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">getSingleton</span><span class="params">(String beanName, <span class="keyword">boolean</span> allowEarlyReference)</span> </span>&#123;</span><br><span class="line">    Object singletonObject = <span class="keyword">this</span>.singletonObjects.get(beanName);</span><br><span class="line">    <span class="keyword">if</span> (singletonObject == <span class="keyword">null</span> &amp;&amp; isSingletonCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>.singletonObjects) &#123;</span><br><span class="line">            singletonObject = <span class="keyword">this</span>.earlySingletonObjects.get(beanName);</span><br><span class="line">            <span class="keyword">if</span> (singletonObject == <span class="keyword">null</span> &amp;&amp; allowEarlyReference) &#123;</span><br><span class="line">                ObjectFactory&lt;?&gt; singletonFactory = <span class="keyword">this</span>.singletonFactories.get(beanName);</span><br><span class="line">                <span class="keyword">if</span> (singletonFactory != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    singletonObject = singletonFactory.getObject();</span><br><span class="line">                    <span class="keyword">this</span>.earlySingletonObjects.put(beanName, singletonObject);</span><br><span class="line">                    <span class="keyword">this</span>.singletonFactories.remove(beanName);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> singletonObject;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>DefaultSingletonBeanRegistry中维护了一个线程安全的缓存和非线程安全的缓存来存放这些单实例的bean,这个map就是singletonObjects和earlySingletonObjects．<br>注册中心注册bean实例的时候会从单例对象map中查找，如果没有则添加到对应的单例对象map和缓存中，确保容器中只有一个单实例．</p>
+<h4 id="添加实例的方法"><a href="#添加实例的方法" class="headerlink" title="添加实例的方法"></a>添加实例的方法</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">addSingleton</span><span class="params">(String beanName, Object singletonObject)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.singletonObjects) &#123;</span><br><span class="line">        <span class="keyword">this</span>.singletonObjects.put(beanName, singletonObject);</span><br><span class="line">        <span class="keyword">this</span>.singletonFactories.remove(beanName);</span><br><span class="line">        <span class="keyword">this</span>.earlySingletonObjects.remove(beanName);</span><br><span class="line">        <span class="keyword">this</span>.registeredSingletons.add(beanName);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中的sigletonFactory是单例模式的工厂实现，如果获取一个单实例，先从singletonObjects中查找，如果没有再从缓存的earlySingletonObject中查找<br>，如果仍然找不到对应的单实例，则通过该单实例的制造工厂创建一个．<br>从获取实例的过程中可以看出，earlySingletonObject是专门存放通过单例工厂创建的单例的．这个缓存不是线程安全的．</p>
+<h3 id="spring的单例工厂类的实现"><a href="#spring的单例工厂类的实现" class="headerlink" title="spring的单例工厂类的实现"></a>spring的单例工厂类的实现</h3><p>从异常栈中可以看出AbstractBeanFactory的AbstractAutowireCapableBeanFactory模板类中通过了单例工厂来创建单例<br>doGetBean方法的代码片段<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (mbd.isSingleton()) &#123;</span><br><span class="line">    sharedInstance = getSingleton(beanName, () -&gt; &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> createBean(beanName, mbd, args);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line">            <span class="comment">// Explicitly remove instance from singleton cache: It might have been put there</span></span><br><span class="line">            <span class="comment">// eagerly by the creation process, to allow for circular reference resolution.</span></span><br><span class="line">            <span class="comment">// Also remove any beans that received a temporary reference to the bean.</span></span><br><span class="line">            destroySingleton(beanName);</span><br><span class="line">            <span class="keyword">throw</span> ex;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>createBean的伪代码<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">RootBeanDefinition mbdToUse = mbd;</span><br><span class="line">获取类的<span class="class"><span class="keyword">class</span></span></span><br><span class="line"><span class="class"><span class="title">Class</span>&lt;?&gt; <span class="title">resolvedClass</span> </span>= resolveBeanClass(mbd, beanName);</span><br><span class="line"><span class="comment">//声明一个bean描述类</span></span><br><span class="line">mbdToUse = <span class="keyword">new</span> RootBeanDefinition(mbd);</span><br><span class="line">mbdToUse.setBeanClass(resolvedClass);</span><br><span class="line"><span class="comment">//获取对应对象Class类型</span></span><br><span class="line">Class&lt;?&gt; targetType = determineTargetType(beanName, mbd);</span><br><span class="line">bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);</span><br><span class="line"></span><br><span class="line"><span class="comment">//....构造bean</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">applyBeanPostProcessorsBeforeInstantiation</span><span class="params">(Class&lt;?&gt; beanClass, String beanName)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (BeanPostProcessor bp : getBeanPostProcessors()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (bp <span class="keyword">instanceof</span> InstantiationAwareBeanPostProcessor) &#123;</span><br><span class="line">            InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;</span><br><span class="line">            Object result = ibp.postProcessBeforeInstantiation(beanClass, beanName);</span><br><span class="line">            <span class="keyword">if</span> (result != <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> result;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>RootBeanDefinition mbd就是继承BeanDefinition的实现类，这个接口描述bean的结构，对应XML中的bean定义，<br>可以看出spring是通过单例工厂创建单例时是通过InstantiationAwareBeanPostProcessor或者说BeanProcessor的回调<br>来返回对应实例的．这个接口其实是bean实例化的后置处理类，其返回的对象会代理原来实例的bean，这个不做探讨．</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>从源码中可以看出，spring容器中实现的单例和我们通常情况下理解的设计模式中的单例是不一样，设计模式中的单例模式是将构造方法私有，在<br>整个应用中只有一个实例．而spring容器的单例是在整个容器中只有一个实例，由于ioc的控制反转，bean实例的生成和销毁都交给了spring容器，<br>本质上只是控制反射生成类实例的时候不在容器中重复创建，不通过私有构造方法便可以达到单例的效果也就不难理解了．</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/java/" rel="tag"># java</a>
+          
+            <a href="/tags/spring/" rel="tag"># spring</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/11/20/spring源码阅读-ioc设计与实现-一/" rel="next" title="spring源码阅读-ioc设计与实现(一)">
+                <i class="fa fa-chevron-left"></i> spring源码阅读-ioc设计与实现(一)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/01/21/spring源码阅读-aop的设计与实现-一/" rel="prev" title="spring源码阅读-aop的设计与实现(一)">
+                spring源码阅读-aop的设计与实现(一) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image" src="/images/logo.jpg" alt="fishisnow">
+          <p class="site-author-name" itemprop="name">fishisnow</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">15</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#从异常栈说起"><span class="nav-number">1.</span> <span class="nav-text">从异常栈说起</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ioc获取单例的bean"><span class="nav-number">2.</span> <span class="nav-text">ioc获取单例的bean</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#注册单例的方法"><span class="nav-number">2.1.</span> <span class="nav-text">注册单例的方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#添加实例的方法"><span class="nav-number">2.2.</span> <span class="nav-text">添加实例的方法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spring的单例工厂类的实现"><span class="nav-number">3.</span> <span class="nav-text">spring的单例工厂类的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">fishisnow</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/three/three.min.js"></script>
+
+  
+  <script type="text/javascript" src="/lib/three/three-waves.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
