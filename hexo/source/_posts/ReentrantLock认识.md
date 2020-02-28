@@ -6,7 +6,7 @@ tags:
 
 ReentrantLock和synchronized都是独占锁，在并发场景时用来确保某块代码区域只被一个线程访问。
 
-ReentrantLock提供了更灵活的方式来实现并发控制。synchronized是自动加锁和解锁，方法开始执行则加锁，执行完自动解锁，ReentrantLock则使用condition显式地控制加锁和解锁。就像java和c++一样，一个自动管理内存，一个是需要开发手动地申请和释放内存。
+ReentrantLock提供了更灵活的方式来实现并发控制。synchronized是自动加锁和解锁，方法开始执行则加锁，执行完自动解锁，ReentrantLock则使用condition显式地控制加锁和解锁。就像java和c++一样，一个自动管理内存，一个是需要开发手动地申请和释放内存。<!--more-->
 
 
 
